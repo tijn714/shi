@@ -128,6 +128,18 @@ uint32_t* shi(char *data) {
         h7 += h;
     }
 
+    // Shuffle sg and h0-h7
+    uint32_t temp = sg;
+    sg = h0;
+    h0 = h1;
+    h1 = h2;
+    h2 = h3;
+    h3 = h4;
+    h4 = h5;
+    h5 = h6;
+    h6 = h7;
+    h7 = temp;
+
     uint32_t* result = (uint32_t*)malloc(9 * sizeof(uint32_t));
     result[0] = sg;
     result[1] = h0;
@@ -147,4 +159,25 @@ uint32_t* shi_salt(const char *data, const char *salt) {
     strcpy(salted_data, data);
     strcat(salted_data, salt);
     return shi(salted_data);
+}
+
+
+uint32_t* shi_file(FILE *file) {
+    fseek(file, 0, SEEK_END);
+    long len = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    char *data = (char *)malloc(len + 1);
+    fread(data, 1, len, file);
+    data[len] = 0;
+    return shi(data);
+}
+
+uint32_t* shi_file_salt(FILE *file, const char *salt) {
+    fseek(file, 0, SEEK_END);
+    long len = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    char *data = (char *)malloc(len + 1);
+    fread(data, 1, len, file);
+    data[len] = 0;
+    return shi_salt(data, salt);
 }
