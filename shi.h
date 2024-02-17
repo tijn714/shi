@@ -52,17 +52,17 @@ uint32_t gamma1(uint32_t x) {
 }
 
 uint32_t* shi(char *data) {
-    uint32_t sg = 0x53484130;
+    uint32_t sg = 0x564c4748;
     uint32_t h0 = 0x6a09e667;
-    uint32_t h1 = 0xbb67ae85;
-    uint32_t h2 = 0x3c6ef372;
+    uint32_t h1 = 0xdd67fe85;
+    uint32_t h2 = 0x386ef372;
     uint32_t h3 = 0xa54ff53a;
     uint32_t h4 = 0x510e527f;
-    uint32_t h5 = 0x9b05688c;
-    uint32_t h6 = 0x1f83d9ab;
-    uint32_t h7 = 0x5be0cd19;
+    uint32_t h5 = 0x9b056c8c;
+    uint32_t h6 = 0x1c23d9ab;
+    uint32_t h7 = 0x5eb07d19;
     
-    int len = strlen(data);
+    int len = strlen(data); 
     int bit_len = len * 8;
     int new_len = len + 1;
     
@@ -128,7 +128,6 @@ uint32_t* shi(char *data) {
         h7 += h;
     }
 
-    // Shuffle sg and h0-h7
     uint32_t temp = sg;
     sg = h0;
     h0 = h1;
@@ -141,6 +140,17 @@ uint32_t* shi(char *data) {
     h7 = temp;
 
     uint32_t* result = (uint32_t*)malloc(9 * sizeof(uint32_t));
+    sg = gamma0(sg) + gamma1(h0) + ch(h0, h1, h2) + constants[0] + sg;
+    h0 = gamma0(h0) + gamma1(h1) + ch(h1, h2, h3) + constants[1] + h0;
+    h1 = gamma0(h1) + gamma1(h2) + ch(h2, h3, h4) + constants[2] + h1;
+    h2 = gamma0(h2) + gamma1(h3) + ch(h3, h4, h5) + constants[3] + h2;
+    h3 = gamma0(h3) + gamma1(h4) + ch(h4, h5, h6) + constants[4] + h3;
+    h4 = gamma0(h4) + gamma1(h5) + ch(h5, h6, h7) + constants[5] + h4;
+    h5 = gamma0(h5) + gamma1(h6) + ch(h6, h7, sg) + constants[6] + h5;
+    h6 = gamma0(h6) + gamma1(h7) + ch(h7, sg, h0) + constants[7] + h6;
+    h7 = gamma0(h7) + gamma1(sg) + ch(sg, h0, h1) + constants[8] + h7;
+
+
     result[0] = sg;
     result[1] = h0;
     result[2] = h1;
@@ -151,6 +161,8 @@ uint32_t* shi(char *data) {
     result[7] = h6;
     result[8] = h7;
 
+    
+    
     return result;
 }
 
@@ -170,14 +182,4 @@ uint32_t* shi_file(FILE *file) {
     fread(data, 1, len, file);
     data[len] = 0;
     return shi(data);
-}
-
-uint32_t* shi_file_salt(FILE *file, const char *salt) {
-    fseek(file, 0, SEEK_END);
-    long len = ftell(file);
-    fseek(file, 0, SEEK_SET);
-    char *data = (char *)malloc(len + 1);
-    fread(data, 1, len, file);
-    data[len] = 0;
-    return shi_salt(data, salt);
 }
